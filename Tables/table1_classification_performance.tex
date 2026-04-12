@@ -1,0 +1,14 @@
+\begin{table}[htbp]
+  \centering
+  \caption{Baseline classification performance on PTB-XL Plus test set (n=2,180, threshold=0.50). Models trained on SMOTE-balanced folds 1--8.}
+  \label{tab:p1_classification}
+  \begin{tabular}{lrrrrrrrr}
+  \toprule
+  Model & Accuracy & Precision & Recall (Sensitivity) & Specificity & F1 Score & ROC-AUC & Brier Score & FN Rate \\
+  \midrule
+  Logistic Regression & 0.8206 & 0.6375 & 0.7281 & 0.8534 & 0.6798 & 0.8603 & 0.1352 & 0.2719 \\
+  Random Forest & 0.8812 & 0.8494 & 0.6632 & 0.9584 & 0.7448 & 0.8845 & 0.1079 & 0.3368 \\
+  XGBoost & 0.8862 & 0.861 & 0.6737 & 0.9615 & 0.7559 & 0.8867 & 0.096 & 0.3263 \\
+  \bottomrule
+  \end{tabular}
+\end{table}
