@@ -1,66 +1,103 @@
 # Beyond Accuracy: Toward Trustworthy and Interpretable AI for Heart Rhythm Detection from ECG Signals
 
-**Nazish Atta** | Department of Computer Science | George Washington University | Washington, D.C.  
-*Presented at the 2026 CCAS Research Showcase, George Washington University*
+**Nazish Atta** · Department of Computer Science · George Washington University · Washington, D.C.  
+*2026 CCAS Research Showcase, George Washington University*
 
 ---
 
-## Overview
+## Scanned a QR code? Start here.
 
-This repository contains the complete implementation of a **trustworthiness-oriented evaluation framework** for machine learning models applied to ECG arrhythmia detection. Rather than optimizing for accuracy alone, this study evaluates models across four clinical trustworthiness dimensions: **sensitivity**, **precision-recall performance**, **probability calibration**, and **SHAP-based interpretability**.
+This project asks a simple clinical question: **which AI model is safest for detecting dangerous heart rhythms?**
 
-The central finding: the most accurate model (XGBoost, 88.6%) missed **186 arrhythmia patients**, while the less accurate Logistic Regression (82.1%) missed only **155** — demonstrating that accuracy alone is insufficient for safe clinical AI deployment.
+The answer is not the most accurate one.
 
----
+> XGBoost achieved the highest accuracy (88.6%) — but missed **186** arrhythmia patients.  
+> Logistic Regression was 6.5 points less accurate — but missed only **155**.  
+> **The most accurate model was not the safest model for clinical screening.**
 
-## Results Summary
-
-| Model | Accuracy | Recall | Specificity | AUC-ROC | Brier Score | False Negatives |
-|-------|----------|--------|-------------|---------|-------------|-----------------|
-| Logistic Regression | 82.06% | **72.81%** ★ | 85.34% | 0.8603 | 0.1352 | **155** ★ |
-| Random Forest | 88.12% | 66.32% | 95.84% | 0.8845 | 0.1079 | 192 |
-| XGBoost | **88.62%** ★ | 67.37% | **96.15%** ★ | **0.8867** ★ | **0.0960** ★ | 186 |
-
-> ★ = best value for that metric. For False Negatives and Brier Score, lower is better.
+This repository contains the full code, results, and figures behind that finding.
 
 ---
 
 ## Key Findings
 
-- **Accuracy paradox**: XGBoost is the most accurate model (88.62%) but misses 186 arrhythmia cases. Logistic Regression, with 6.5 percentage points lower accuracy, misses 37 fewer patients.
-- **Error character differs**: Tree-based model misses (RF, XGBoost) are "confident misses" — the model assigns very low arrhythmia probability to these cases, making them harder to recover through threshold adjustment. LR's misses cluster near the decision boundary and are more recoverable.
-- **Calibration**: XGBoost achieves the lowest Brier score (0.0960), indicating the best overall probability calibration. Logistic Regression has the highest Brier score (0.1352) despite the common assumption that linear models are inherently well-calibrated.
-- **SHAP interpretability**: The top predictive features — RR interval, QRS count, ventricular rate, atrial rate, and P-wave morphology — all correspond to established clinical ECG diagnostic criteria, supporting clinical trust in the model's behavior.
+| Finding | Detail |
+|---------|--------|
+| **Accuracy ≠ Safety** | XGBoost (88.62% accurate) misses 31 more arrhythmia cases than Logistic Regression (82.06% accurate) |
+| **Error character matters** | Tree-model misses are confident "Normal" predictions — harder to recover via threshold adjustment. LR's misses cluster near the decision boundary and are more amenable to correction. |
+| **Best calibration: XGBoost** | Lowest Brier score (0.0960). Logistic Regression — despite the common assumption — has the worst calibration (Brier = 0.1352) on this dataset. |
+| **Clinically coherent features** | SHAP analysis shows the top predictors are RR interval, QRS count, ventricular rate, atrial rate, and P-wave morphology — all established clinical ECG markers. |
 
 ---
 
-## Dataset
+## Results Summary
 
-- **Source**: [PTB-XL Plus](https://physionet.org/content/ptb-xl-plus/1.0.1/) (version 1.0.1) — Strodthoff et al., *Scientific Data*, 2023
-- **Size**: 21,799 clinical 12-lead ECG recordings (21,732 used after excluding 67 with missing 12SL features)
-- **Features**: 782 structured ECG features extracted by the 12SL algorithm
-- **Label**: Binary — Arrhythmia (any non-normal SCP-ECG rhythm code) vs. Normal
-- **Split**: Stratified 10-fold — Folds 1–8 train (17,374), Fold 9 validation (2,178), Fold 10 test (2,180)
-- **Class imbalance**: 26.1% arrhythmia prevalence in test set; SMOTE applied to training set only
+Evaluated on the PTB-XL Plus test set — **2,180 ECGs, 570 true arrhythmia cases** (26.1% prevalence).
+
+| Model | Accuracy | Recall | Specificity | AUC-ROC | Brier Score ↓ | False Negatives ↓ |
+|-------|:--------:|:------:|:-----------:|:-------:|:-------------:|:-----------------:|
+| Logistic Regression | 82.06% | **72.81%** ★ | 85.34% | 0.8603 | 0.1352 | **155** ★ |
+| Random Forest | 88.12% | 66.32% | 95.84% | 0.8845 | 0.1079 | 192 |
+| XGBoost | **88.62%** ★ | 67.37% | **96.15%** ★ | **0.8867** ★ | **0.0960** ★ | 186 |
+
+> ★ = best on that metric. ↓ = lower is better (Brier Score, False Negatives).
+
+**Extended metrics** (F1, MCC, Average Precision, Balanced Accuracy) are in [`Results/metrics_full.csv`](Results/metrics_full.csv).
 
 ---
 
-## Methodology
+## Figures and Tables
+
+All figures are in [`Plots/`](Plots/) and all tables are in [`Tables/`](Tables/).
+
+| File | Description |
+|------|-------------|
+| [`plot1_roc_curves.png`](Plots/plot1_roc_curves.png) | ROC curves for all three models — AUC-ROC: LR=0.8603, RF=0.8845, XGB=0.8867 |
+| [`plot2_pr_curves.png`](Plots/plot2_pr_curves.png) | Precision-recall curves — Average Precision: LR=0.7574, RF=0.8060, XGB=0.8151 |
+| [`plot3_confusion_matrices.png`](Plots/plot3_confusion_matrices.png) | Confusion matrices for all three models |
+| [`plot4_calibration_curves.png`](Plots/plot4_calibration_curves.png) | Reliability diagrams — shows deviation from perfect calibration for all models |
+| [`plot5_false_negative_analysis.png`](Plots/plot5_false_negative_analysis.png) | Predicted probability distributions for detected vs. missed arrhythmia cases |
+| [`plot6_shap_beeswarm_rf.png`](Plots/plot6_shap_beeswarm_rf.png) | SHAP beeswarm — per-patient feature contributions (500-sample test subset, RF) |
+| [`plot7_shap_bar_top15_rf.png`](Plots/plot7_shap_bar_top15_rf.png) | Top 15 ECG features by mean absolute SHAP value |
+
+| File | Description |
+|------|-------------|
+| [`table1_classification_performance`](Tables/table1_classification_performance.csv) | Core metrics: Accuracy, Precision, Recall, Specificity, F1, AUC |
+| [`table2_full_metrics`](Tables/table2_full_metrics.csv) | Extended metrics: Brier Score, MCC, Average Precision, Balanced Accuracy |
+| [`table3_confusion_counts`](Tables/table3_confusion_counts.csv) | TP, FP, FN, TN, FN rate, FP rate for all three models |
+| [`table4_shap_top10_rf`](Tables/table4_shap_top10_rf.csv) | Top 10 ECG features by mean \|SHAP\| with clinical interpretation |
+
+Each table is available in both `.csv` (for inspection) and `.tex` (for direct LaTeX inclusion).
+
+---
+
+## Methods Summary
+
+### Dataset
+
+- **PTB-XL Plus** (v1.0.1) — [Strodthoff et al., *Scientific Data*, 2023](https://physionet.org/content/ptb-xl-plus/1.0.1/)
+- 21,799 clinical 12-lead ECGs; **21,732 used** (67 excluded due to missing 12SL feature records)
+- **782 structured features** per recording, extracted by the 12SL algorithm
+- **Binary label**: Arrhythmia (any non-normal SCP-ECG rhythm code) vs. Normal
+- **Split**: Folds 1–8 → train (17,374), Fold 9 → validation (2,178), Fold 10 → test (2,180)
+- **Class imbalance**: SMOTE applied to training set only; test set retains natural 26.1% prevalence
 
 ### Models
-| Model | Description |
-|-------|-------------|
-| Logistic Regression | L2-regularized linear classifier; transparent probabilistic baseline |
-| Random Forest | 100-tree bootstrap ensemble; captures non-linear feature interactions |
-| XGBoost | Gradient-boosted tree ensemble; state-of-the-art tabular performance |
 
-All models use default hyperparameters, fixed random seed (42), and decision threshold 0.50.
+| Model | Role |
+|-------|------|
+| Logistic Regression (LR) | Transparent probabilistic baseline; L2 regularization |
+| Random Forest (RF) | 100-tree bootstrap ensemble; non-linear feature interactions |
+| XGBoost | Gradient-boosted tree ensemble; strongest aggregate performance |
 
-### Evaluation Framework (4 Dimensions)
+All models: default hyperparameters, random seed = 42, decision threshold = 0.50.
+
+### Evaluation Framework — Four Dimensions
+
 1. **Discriminative performance** — Accuracy, Precision, Recall, F1, Specificity, MCC, AUC-ROC, Average Precision
-2. **False-negative analysis** — FN rate, probability distributions of detected vs. missed arrhythmia cases
-3. **Probability calibration** — Reliability diagrams (calibration curves) and Brier score
-4. **SHAP interpretability** — TreeExplainer on Random Forest; global feature ranking via mean |SHAP| over 500-sample test subset
+2. **False-negative analysis** — FN rate; predicted probability distributions for missed vs. detected cases
+3. **Probability calibration** — Reliability diagrams and Brier score
+4. **SHAP interpretability** — TreeExplainer on Random Forest; global feature importance via mean |SHAP| on a 500-sample test subset
 
 ---
 
@@ -69,42 +106,54 @@ All models use default hyperparameters, fixed random seed (42), and decision thr
 ```
 beyond-accuracy-ecg-trustworthiness/
 │
-├── Notebooks/                        # Python pipeline scripts + Jupyter notebooks
-│   ├── 01_load_data.py               # Data loading, label construction, EDA
-│   ├── 02_preprocess.py              # Imputation, scaling, SMOTE
-│   ├── 03_train_models.py            # LR, RF, XGBoost training
-│   ├── 04_evaluate.py                # ROC, PR, calibration, FN analysis plots
-│   ├── 05_shap_analysis.py           # SHAP TreeExplainer, beeswarm + bar plots
-│   ├── 06_threshold_sensitivity.py   # Threshold sweep analysis
-│   ├── 07_platt_scaling.py           # Post-hoc probability recalibration
-│   ├── 08_subtype_fn_analysis.py     # Arrhythmia subtype FN breakdown
-│   ├── 09_rebuild_paper1.py          # Full Paper 1 rebuild from saved models
-│   ├── 01–09_*.ipynb                 # Jupyter notebooks for each analysis step
-│   └── 10_paper1_full_analysis.ipynb # Complete Paper 1 analysis notebook
+├── Notebooks/                              # Full analysis pipeline
+│   │
+│   ├── — Python scripts (run in order) —
+│   ├── 01_load_data.py                     # Data loading, label construction, EDA
+│   ├── 02_preprocess.py                    # Median imputation, StandardScaler, SMOTE
+│   ├── 03_train_models.py                  # Train LR, RF, XGBoost; save .pkl files
+│   ├── 04_evaluate.py                      # ROC, PR, calibration, FN analysis plots
+│   ├── 05_shap_analysis.py                 # SHAP TreeExplainer; beeswarm + bar chart
+│   ├── 06_threshold_sensitivity.py         # Threshold sweep across operating points
+│   ├── 07_platt_scaling.py                 # Post-hoc Platt scaling recalibration
+│   ├── 08_subtype_fn_analysis.py           # FN breakdown by arrhythmia subtype
+│   └── 09_rebuild_paper1.py               # Full reproducibility rebuild from saved models
+│   │
+│   └── — Jupyter notebooks (interactive exploration) —
+│       ├── 01_baseline_model_comparison.ipynb
+│       ├── 02_false_negative_and_precision_recall_analysis.ipynb
+│       ├── 03_calibration_analysis.ipynb
+│       ├── 04_threshold_sensitivity_analysis.ipynb
+│       ├── 05_platt_scaling_recalibration.ipynb
+│       ├── 06_arrhythmia_subtype_false_negative_breakdown.ipynb
+│       ├── 07_shap_global_interpretability.ipynb
+│       ├── 08_shap_waterfall_case_studies.ipynb
+│       ├── 09_final_tables_and_figures.ipynb
+│       └── 10_paper1_full_analysis.ipynb
 │
-├── Plots/                            # Final figures (poster and paper ready)
-│   ├── plot1_roc_curves.png          # ROC curves — LR, RF, XGBoost
-│   ├── plot2_pr_curves.png           # Precision-recall curves
-│   ├── plot3_confusion_matrices.png  # Confusion matrices (all 3 models)
-│   ├── plot4_calibration_curves.png  # Reliability diagrams + Brier scores
-│   ├── plot5_false_negative_analysis.png  # Missed vs. detected probability distributions
-│   ├── plot6_shap_beeswarm_rf.png    # SHAP beeswarm (500-sample test subset)
-│   └── plot7_shap_bar_top15_rf.png   # Top 15 features by mean |SHAP|
+├── Plots/                                  # 7 final figures (300 dpi, poster-ready)
+│   ├── plot1_roc_curves.png
+│   ├── plot2_pr_curves.png
+│   ├── plot3_confusion_matrices.png
+│   ├── plot4_calibration_curves.png
+│   ├── plot5_false_negative_analysis.png
+│   ├── plot6_shap_beeswarm_rf.png
+│   └── plot7_shap_bar_top15_rf.png
 │
-├── Results/                          # Computed metrics and findings
-│   ├── metrics_comparison.csv        # Core classification metrics
-│   ├── metrics_full.csv              # Extended metrics (Brier, MCC, Bal. Acc.)
-│   ├── model_comparison.csv          # Side-by-side model comparison
-│   ├── shap_feature_importance_rf.csv # Full SHAP feature ranking (782 features)
-│   └── poster_findings_verified.txt  # Verified findings summary
+├── Results/                                # Computed metrics and verified findings
+│   ├── metrics_comparison.csv             # Core classification metrics
+│   ├── metrics_full.csv                   # Extended metrics (Brier, MCC, Bal. Acc.)
+│   ├── model_comparison.csv               # Side-by-side model comparison
+│   ├── shap_feature_importance_rf.csv     # Full SHAP ranking for all 782 features
+│   └── poster_findings_verified.txt       # Human-readable verified findings summary
 │
-├── Tables/                           # Publication-ready tables
-│   ├── table1_classification_performance.csv / .tex
-│   ├── table2_full_metrics.csv / .tex
-│   ├── table3_confusion_counts.csv / .tex
-│   └── table4_shap_top10_rf.csv / .tex
+├── Tables/                                 # Publication-ready tables (.csv + .tex)
+│   ├── table1_classification_performance.{csv,tex}
+│   ├── table2_full_metrics.{csv,tex}
+│   ├── table3_confusion_counts.{csv,tex}
+│   └── table4_shap_top10_rf.{csv,tex}
 │
-└── src/                              # Original source scripts
+└── src/                                    # Source scripts (original versions)
     ├── evaluate.py
     ├── load_data.py
     ├── preprocess.py
@@ -114,14 +163,17 @@ beyond-accuracy-ecg-trustworthiness/
 
 ---
 
-## How to Run
+## Reproducibility
 
 ### Requirements
+
 ```bash
-pip install numpy pandas scikit-learn xgboost shap imbalanced-learn matplotlib seaborn joblib
+pip install numpy==1.26 pandas==2.1 scikit-learn==1.8 xgboost==2.0 \
+            shap==0.44 imbalanced-learn matplotlib seaborn joblib
 ```
 
-### Pipeline (run in order)
+### Run the full pipeline
+
 ```bash
 python Notebooks/01_load_data.py
 python Notebooks/02_preprocess.py
@@ -130,32 +182,87 @@ python Notebooks/04_evaluate.py
 python Notebooks/05_shap_analysis.py
 ```
 
-All outputs (models, plots, results) are saved to `outputs/` automatically.
+All outputs — trained model `.pkl` files, plots, and result CSVs — are written to `outputs/` automatically.
 
-### Environment
-- Python 3.11 | NumPy 1.26 | pandas 2.1 | scikit-learn 1.8 | XGBoost 2.0 | SHAP 0.44
-- Fixed random seed: 42
+To regenerate all Paper 1 figures and tables from the saved models without retraining:
+
+```bash
+python Notebooks/09_rebuild_paper1.py
+```
+
+**Environment**: Python 3.11 · random seed 42 · Windows 11 / Linux compatible
+
+> **Note on data**: PTB-XL Plus must be downloaded separately from [PhysioNet](https://physionet.org/content/ptb-xl-plus/1.0.1/) and placed in the project root before running `01_load_data.py`. The dataset is not included in this repository.
+
+---
+
+## Poster and Paper Status
+
+| Item | Status |
+|------|--------|
+| Research poster | Presented — 2026 CCAS Research Showcase, GWU |
+| Manuscript | In preparation |
+| Code | Complete and reproducible |
+| Data | Publicly available via PhysioNet (not redistributed here) |
 
 ---
 
 ## Citation
 
-If you use this code or findings, please cite:
+```bibtex
+@misc{atta2026beyond,
+  author    = {Nazish Atta},
+  title     = {Beyond Accuracy: Toward Trustworthy and Interpretable AI
+               for Heart Rhythm Detection from {ECG} Signals},
+  year      = {2026},
+  note      = {Presented at the 2026 CCAS Research Showcase,
+               George Washington University, Washington, D.C.}
+}
+```
 
-```
-Atta, N. (2026). Beyond Accuracy: Toward Trustworthy and Interpretable AI for
-Heart Rhythm Detection from ECG Signals. Presented at the 2026 CCAS Research
-Showcase, George Washington University, Washington, D.C.
+**Dataset:**
+
+```bibtex
+@article{strodthoff2023ptbxlplus,
+  author  = {Strodthoff, Nils and others},
+  title   = {{PTB-XL+}, a comprehensive electrocardiographic feature dataset},
+  journal = {Scientific Data},
+  volume  = {10},
+  pages   = {279},
+  year    = {2023}
+}
 ```
 
-**Dataset citation:**
-```
-Strodthoff, N. et al. (2023). PTB-XL+, a comprehensive electrocardiographic
-feature dataset. Scientific Data, 10(1), 279.
-```
+---
+
+## Contact
+
+**Nazish Atta**  
+Department of Computer Science, George Washington University  
+Washington, D.C., USA  
+[nazishatta@gwu.edu](mailto:nazishatta@gwu.edu) · [GitHub](https://github.com/nazishatta)
 
 ---
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+This code is released under the [MIT License](LICENSE).  
+The PTB-XL Plus dataset is subject to its own license — see [PhysioNet](https://physionet.org/content/ptb-xl-plus/1.0.1/) for terms.
+
+---
+
+<!--
+INTERNAL NOTE — not rendered on GitHub:
+
+Filename inconsistencies to clean up in a future commit:
+- Notebooks/ uses conflicting number prefixes: .py scripts (01–09) and .ipynb
+  notebooks (01–10) share the same prefix numbers, creating visual ambiguity
+  in directory listings. Recommend renaming .ipynb files to a separate series
+  (e.g., NB01–NB10) or moving scripts and notebooks into separate subdirectories.
+- README_github.md at the repo root is a 3-line stub that duplicates this README.
+  Safe to delete.
+- Results/ contains untracked subdirectories (baseline_metrics/, calibration/,
+  shap/, subtype_fn/, threshold_analysis/) not yet pushed to GitHub.
+  Consider either committing them or adding them to .gitignore.
+- Tables/ contains untracked drafts/ and final/ subdirectories.
+-->
