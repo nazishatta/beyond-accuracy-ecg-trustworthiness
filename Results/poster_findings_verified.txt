@@ -1,0 +1,140 @@
+================================================================
+  PAPER 1 -- VERIFIED POSTER FINDINGS
+  Beyond Accuracy: Toward Trustworthy and Interpretable AI
+  for Heart Rhythm Detection from ECG Signals
+  Nazish Atta | George Washington University
+================================================================
+
+DATASET
+-------
+  Source    : PTB-XL Plus (21,799 clinical 12-lead ECGs)
+  Features  : 782 structured ECG features (12SL algorithm)
+  Train     : 17,374 -> 25,756 after SMOTE (50/50 balance)
+  Val       : 2,178 records | Arrhythmia: 570 (26.2%)
+  Test      : 2,180 records | Arrhythmia: 570 (26.1%)
+  Threshold : 0.50 (default for all baseline results)
+
+================================================================
+FINDING 1: MODEL PERFORMANCE (Tables 1-3 -- fully verified)
+================================================================
+
+  Metric                LR          RF          XGB
+  -------------------------------------------------------
+  Accuracy            82.06%      88.12%      88.62% [BEST]
+  Balanced Accuracy   79.07%      81.08%      81.76%
+  Precision           0.6375      0.8494      0.8610 [BEST]
+  Recall/Sensitivity  0.7281 [BEST] 0.6632      0.6737
+  Specificity         0.8534      0.9584      0.9615 [BEST]
+  F1 Score            0.6798      0.7448      0.7559 [BEST]
+  ROC-AUC             0.8603      0.8845      0.8867 [BEST]
+  Avg Precision (AP)  0.7574      0.8060      0.8151 [BEST]
+  Brier Score         0.1352 [WORST] 0.1079      0.0960 [BEST]
+  MCC                 0.5583      0.6776      0.6919 [BEST]
+
+  CONFUSION MATRIX COUNTS (test set n=2,180):
+  Model    TP    FP    FN    TN    FN-Rate   FP-Rate
+  ---------------------------------------------------------
+  LR        415    236    155   1374   27.2% [BEST]   14.7%
+  RF        378      67    192   1543   33.7%       4.2%
+  XGB       384      62    186   1548   32.6%       3.9%
+
+  KEY INSIGHT 1 (for poster):
+  XGBoost has highest accuracy (88.62%), F1 (0.7559),
+  and AUC (0.8867). Best overall discriminator.
+
+  KEY INSIGHT 2 (CRITICAL -- most accurate != safest):
+  LR misses FEWEST arrhythmias: FN=155 (27.2%)
+  RF misses:  FN=192 (33.7%)
+  XGB misses: FN=186 (32.6%)
+  Despite lowest accuracy (82.06%), LR is the safest model
+  for clinical deployment where missed cases are critical.
+
+================================================================
+FINDING 2: CALIBRATION (Plot 4 -- verified)
+================================================================
+
+  LR  Brier = 0.1352  [WORST -- most miscalibrated]
+  RF  Brier = 0.1079
+  XGB Brier = 0.0960  [BEST -- most reliable probabilities]
+
+  CORRECT STATEMENT FOR POSTER:
+  XGBoost provides the most reliable probability estimates
+  (Brier = 0.0960). Logistic Regression is the most
+  miscalibrated (Brier = 0.1352) -- its predicted probabilities
+  deviate most from true arrhythmia rates.
+
+  ABSTRACT CORRECTION NEEDED:
+  Original text: 'Logistic Regression provides the most reliable
+  probability estimates'
+  CORRECT text:  'XGBoost provides the most reliable probability
+  estimates (Brier = 0.0960), while Logistic Regression shows the
+  highest miscalibration (Brier = 0.1352).'
+
+================================================================
+FINDING 3: FALSE-NEGATIVE ANALYSIS (Plot 5 -- verified)
+================================================================
+
+  Of 570 true arrhythmia cases in the test set:
+  LR  missed: 155 cases (27.2%)  <-- FEWEST MISSED
+  RF  missed: 192 cases (33.7%)
+  XGB missed: 186 cases (32.6%)
+
+  DISTRIBUTION PATTERN:
+  - LR missed cases: probabilities spread across 0.10-0.49
+    (uncertain, near-boundary errors)
+  - RF/XGB missed cases: probabilities cluster at 0.05-0.25
+    (confidently wrong -- overconfident in 'Normal' label)
+
+  CLINICAL IMPLICATION:
+  Tree models (RF, XGB) assign very low probabilities to some
+  true arrhythmias -- these would never be flagged even if
+  threshold is lowered slightly. LR's errors are more recoverable.
+
+================================================================
+FINDING 4: SHAP INTERPRETABILITY (Plots 6-7 -- RF)
+================================================================
+
+  Top 10 features driving Random Forest predictions:
+  Rank  Feature                   Mean |SHAP|
+  ------------------------------------------------
+   1.   RR_Mean_Global               0.0146
+   2.   QRS_Count_Global             0.0142
+   3.   HR_Ventr_Global              0.0136
+   4.   HR_Atrial_Global             0.0134
+   5.   HR__Global                   0.0126
+   6.   P_On_Global                  0.0064
+   7.   P-_Amp_aVL                   0.0062
+   8.   PR_Int_Global                0.0060
+   9.   P_AreaFull_aVR               0.0057
+  10.   P-_Dur_aVL                   0.0056
+
+  CLINICAL INTERPRETATION:
+  #1 RR_Mean_Global = mean RR interval (heart rhythm regularity)
+  #2 QRS_Count_Global = number of heartbeats in window
+  #3 HR_Ventr_Global = ventricular heart rate
+  #4 HR_Atrial_Global = atrial heart rate
+  #8 PR_Int_Global = PR interval (AV conduction delay)
+  All top features are established ECG diagnostic markers.
+
+  KEY INSIGHT: Model predictions are driven by clinically
+  recognised ECG rhythm features -- supporting interpretability
+  and trust in model behaviour for arrhythmia screening.
+
+================================================================
+POSTER NUMBER CHECKLIST (every value verified from raw data)
+================================================================
+
+  [OK] Dataset: 21,799 ECG records, 782 features
+  [OK] Test set: 2,180 records, 570 arrhythmia (26.1%)
+  [OK] XGBoost accuracy: 88.62%
+  [OK] XGBoost AUC: 0.8867
+  [OK] XGBoost F1: 0.7559
+  [OK] LR sensitivity (recall): 72.81%
+  [OK] LR false negatives: 155 (FN rate 27.2%)
+  [OK] XGBoost Brier score (best calibration): 0.0960
+  [OK] LR Brier score (worst calibration): 0.1352
+  [OK] Top SHAP feature: RR_Mean_Global (rhythm regularity)
+  [MUST FIX] Abstract claims LR has most reliable probs -- WRONG
+             Correct: XGBoost has lowest Brier score
+
+================================================================
