@@ -33,8 +33,8 @@ print("=" * 60)
 
 # ── Load test data ─────────────────────────────────────────────
 test = pd.read_csv(os.path.join(DATA_DIR, "test_processed.csv"))
-X_test = test.drop("label", axis=1)
-y_test = test["label"]
+X_test = test.drop("arrhythmia", axis=1)
+y_test = test["arrhythmia"]
 print(f"Test set: {X_test.shape} | Arrhythmia: {y_test.sum()} ({y_test.mean()*100:.1f}%)")
 
 # ── Load models ────────────────────────────────────────────────
@@ -157,4 +157,4 @@ plt.savefig(os.path.join(PLOTS_DIR, "false_negative_analysis.png"), dpi=300, bbo
 plt.close()
 print("Saved: false_negative_analysis.png")
 
-print("\n✅ Step 4 complete.")
+print("\n[DONE] Step 4 complete.")

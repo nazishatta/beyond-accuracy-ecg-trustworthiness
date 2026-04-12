@@ -33,8 +33,8 @@ rf = joblib.load(os.path.join(MODELS_DIR, "random_forest.pkl"))
 
 print("Loading test set...")
 test = pd.read_csv(os.path.join(DATA_DIR, "test_processed.csv"))
-X_test = test.drop("label", axis=1)
-y_test = test["label"]
+X_test = test.drop("arrhythmia", axis=1)
+y_test = test["arrhythmia"]
 print(f"  Test set: {X_test.shape[0]} rows x {X_test.shape[1]} features")
 
 # Sample 500 rows for SHAP (computational efficiency)
@@ -50,6 +50,8 @@ shap_values = explainer.shap_values(X_sample)
 # For binary classification, use class 1 (arrhythmia)
 if isinstance(shap_values, list):
     sv = shap_values[1]
+elif hasattr(shap_values, "ndim") and shap_values.ndim == 3:
+    sv = shap_values[:, :, 1]
 else:
     sv = shap_values
 
@@ -58,8 +60,9 @@ print(f"  SHAP values shape: {sv.shape}")
 # ── Plot: Beeswarm summary ─────────────────────────────────────
 print("\nGenerating beeswarm summary plot...")
 plt.figure(figsize=(10, 8))
-shap.summary_plot(sv, X_sample, show=False, max_display=15,
-                  plot_title="SHAP Feature Impact — Random Forest\n(each dot = one patient; red = high feature value, blue = low)")
+plt.title("SHAP Feature Impact -- Random Forest\n(each dot = one patient; red = high feature value, blue = low)",
+          fontsize=11, fontweight="bold")
+shap.summary_plot(sv, X_sample, show=False, max_display=15)
 plt.tight_layout()
 plt.savefig(os.path.join(PLOTS_DIR, "shap_summary_beeswarm.png"), dpi=300, bbox_inches="tight")
 plt.close()
@@ -94,4 +97,4 @@ feat_imp.reset_index().rename(columns={"index":"feature", 0:"mean_abs_shap"}).to
 print(f"\nFull feature importance saved: {os.path.join(RESULTS_DIR, 'shap_feature_importance.csv')}")
 
 print("\nAll done! Check outputs/plots/ for poster-ready figures.")
-print("\n✅ Step 5 complete.")
+print("\n[DONE] Step 5 complete.")
