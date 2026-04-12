@@ -1,6 +1,6 @@
 # Beyond Accuracy: Toward Trustworthy and Interpretable AI for Heart Rhythm Detection from ECG Signals
 
-**Nazish Atta** · Department of Computer Science · George Washington University · Washington, D.C.  
+**Nazish Atta** · Department of Data Science · George Washington University · Washington, D.C.  
 *2026 CCAS Research Showcase, George Washington University*
 
 ---
@@ -238,7 +238,7 @@ python Notebooks/09_rebuild_paper1.py
 ## Contact
 
 **Nazish Atta**  
-Department of Computer Science, George Washington University  
+Department of Data Science, George Washington University  
 Washington, D.C., USA  
 [nazishatta@gwu.edu](mailto:nazishatta@gwu.edu) · [GitHub](https://github.com/nazishatta)
 
